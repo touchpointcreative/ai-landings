@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Implementation — Touchpoint Creative</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <!-- Calendly -->
+  <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet" />
+  <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      color: #0d0d0d;
+      background: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Design Tokens ────────────────────────────────────── */
+    :root {
+      --amber:      #fea316;
+      --dark:       #0d0d0d;
+      --white:      #ffffff;
+      --light-bg:   #f7f6f3;
+      --mid-grey:   #6b7280;
+      --radius-sm:  8px;
+      --radius-pill:999px;
+      --max-w:      1100px;
+    }
+
+    /* ─── Typography ───────────────────────────────────────── */
+    h1, h2, h3 { font-family: 'Syne', sans-serif; line-height: 1.15; }
+    h1 { font-size: clamp(2.2rem, 5vw, 3.75rem); font-weight: 800; }
+    h2 { font-size: clamp(1.75rem, 3.5vw, 2.75rem); font-weight: 700; }
+    h3 { font-size: 1.2rem; font-weight: 600; }
+    p  { line-height: 1.7; }
+
+    /* ─── Layout helpers ───────────────────────────────────── */
+    .container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+    section { padding: 96px 0; }
+    @media (max-width: 768px) { section { padding: 64px 0; } }
+
+    /* ─── Utilities ────────────────────────────────────────── */
+    .label {
+      display: inline-block;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 16px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(254,163,22,0.4);
+      border-radius: var(--radius-pill);
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--amber);
+      margin-bottom: 32px;
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+
+    /* ─── Buttons ──────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-pill);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      text-decoration: none;
+      border: none;
+    }
+    .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-amber  { background: var(--amber); color: var(--dark); }
+    .btn-outline-white { background: transparent; color: var(--white); border: 1.5px solid rgba(255,255,255,0.5); }
+    .btn-outline-dark  { background: transparent; color: var(--dark); border: 1.5px solid rgba(13,13,13,0.3); }
+    .btn-dark   { background: var(--dark); color: var(--white); }
+    .btn-lg     { padding: 18px 36px; font-size: 1.05rem; }
+
+    /* ─── NAV ──────────────────────────────────────────────── */
+    #nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--white);
+      border-bottom: 1px solid rgba(13,13,13,0.08);
+      padding: 16px 0;
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; text-decoration: none; }
+
+    /* ─── HERO ─────────────────────────────────────────────── */
+    #hero {
+      background: var(--dark);
+      color: var(--white);
+      padding: 96px 0;
+      overflow: hidden;
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .hero-sub {
+      color: rgba(255,255,255,0.65);
+      font-size: 1.1rem;
+      margin: 24px 0 40px;
+      max-width: 520px;
+    }
+    .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+    .hero-visual { display: flex; justify-content: center; align-items: center; }
+    @media (max-width: 768px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .hero-visual { order: -1; }
+    }
+
+    /* Fade-in animations */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .fade-in-delay-1 { transition-delay: 0.15s; }
+    .fade-in-delay-2 { transition-delay: 0.3s; }
+    .fade-in-delay-3 { transition-delay: 0.45s; }
+    .fade-in-delay-4 { transition-delay: 0.6s; }
+
+    /* ─── PAIN POINTS ─────────────────────────────────────── */
+    #pain { background: var(--white); }
+    .pain-head { max-width: 660px; margin-bottom: 64px; }
+    .pain-head h2 { margin-bottom: 16px; }
+    .pain-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 768px) { .pain-cards { grid-template-columns: 1fr; } }
+    .pain-card {
+      border: 1px solid rgba(13,13,13,0.08);
+      border-radius: var(--radius-sm);
+      padding: 32px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .pain-card:hover {
+      border-color: rgba(254,163,22,0.35);
+      box-shadow: 0 4px 24px rgba(254,163,22,0.08);
+    }
+    .pain-icon { flex-shrink: 0; }
+    .pain-card p { color: var(--mid-grey); font-size: 0.95rem; margin-top: 8px; }
+
+    /* ─── WHAT WE DO ──────────────────────────────────────── */
+    #what { background: var(--light-bg); }
+    .what-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; }
+    @media (max-width: 768px) { .what-inner { grid-template-columns: 1fr; } }
+    .what-body { color: var(--mid-grey); margin: 24px 0 48px; font-size: 1rem; line-height: 1.75; }
+    .pillars { display: flex; flex-direction: column; gap: 32px; }
+    .pillar { display: flex; gap: 20px; align-items: flex-start; }
+    .pillar-accent {
+      width: 3px;
+      background: var(--amber);
+      border-radius: 2px;
+      align-self: stretch;
+      min-height: 60px;
+      flex-shrink: 0;
+    }
+    .pillar h3 { margin-bottom: 8px; }
+    .pillar p { color: var(--mid-grey); font-size: 0.9rem; }
+
+    /* ─── HOW IT WORKS ────────────────────────────────────── */
+    #how { background: var(--white); }
+    .how-head { text-align: center; margin-bottom: 64px; }
+    .how-head p { color: var(--mid-grey); margin-top: 12px; font-size: 1rem; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 48px;
+      position: relative;
+    }
+    @media (max-width: 768px) { .steps { grid-template-columns: 1fr; gap: 40px; } }
+    .step { text-align: center; }
+    .step-num {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--amber);
+      color: var(--dark);
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .step-illus { margin: 0 auto 24px; }
+    .step h3 { margin-bottom: 12px; }
+    .step p { color: var(--mid-grey); font-size: 0.9rem; }
+
+    /* ─── QUIZ TRIGGER ────────────────────────────────────── */
+    #quiz-trigger {
+      background: var(--dark);
+      color: var(--white);
+      text-align: center;
+    }
+    .quiz-trigger-inner { max-width: 680px; margin: 0 auto; }
+    .quiz-trigger-inner h2 { margin-bottom: 16px; }
+    .quiz-trigger-inner p { color: rgba(255,255,255,0.65); margin-bottom: 40px; font-size: 1.05rem; }
+
+    /* ─── CASE STUDY ──────────────────────────────────────── */
+    #cases { background: var(--light-bg); }
+    .cases-head { margin-bottom: 48px; }
+    .case-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    @media (max-width: 768px) { .case-cards { grid-template-columns: 1fr; } }
+    .case-card {
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .case-tag {
+      display: inline-block;
+      background: rgba(254,163,22,0.12);
+      color: var(--amber);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+      width: fit-content;
+    }
+    .case-card h3 { font-size: 1.05rem; }
+    .case-card p { color: var(--mid-grey); font-size: 0.9rem; }
+    .case-outcome {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(13,13,13,0.06);
+    }
+    .case-stat {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: var(--amber);
+    }
+    .case-stat-label { color: var(--mid-grey); font-size: 0.85rem; }
+
+    /* ─── BOOK A CALL ─────────────────────────────────────── */
+    #book { background: var(--amber); }
+    .book-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    @media (max-width: 768px) { .book-inner { grid-template-columns: 1fr; } }
+    .book-inner h2 { color: var(--dark); }
+    .book-inner p { color: rgba(13,13,13,0.7); margin: 16px 0 32px; font-size: 1rem; }
+    .calendly-wrap {
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      min-height: 420px;
+      box-shadow: 0 8px 40px rgba(13,13,13,0.12);
+    }
+
+    /* ─── FOOTER ──────────────────────────────────────────── */
+    #footer {
+      background: var(--dark);
+      color: rgba(255,255,255,0.5);
+      padding: 48px 0;
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer-links a {
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--amber); }
+    .footer-copy { font-size: 0.8rem; }
+
+    /* ═══════════════════════════════════════════════════════ */
+    /* QUIZ MODAL                                             */
+    /* ═══════════════════════════════════════════════════════ */
+    #quiz-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: var(--dark);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+      overflow-y: auto;
+    }
+    #quiz-modal.open { opacity: 1; pointer-events: all; }
+
+    .quiz-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .quiz-logo { color: var(--amber); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+    .quiz-close {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+    .quiz-close:hover { color: var(--white); background: rgba(255,255,255,0.08); }
+
+    .quiz-progress-wrap {
+      padding: 0 32px;
+      padding-top: 16px;
+      flex-shrink: 0;
+    }
+    .quiz-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 8px;
+    }
+    .quiz-progress-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .quiz-progress-fill {
+      height: 100%;
+      background: var(--amber);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    .quiz-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px 32px;
+      max-width: 760px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .quiz-question {
+      display: none;
+      animation: qfadein 0.4s ease forwards;
+    }
+    .quiz-question.active { display: block; }
+    @keyframes qfadein {
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .quiz-q-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 16px;
+    }
+    .quiz-q-text {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.3rem, 3vw, 1.9rem);
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+    .quiz-q-sub {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.875rem;
+      margin-bottom: 36px;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .quiz-options.grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 600px) { .quiz-options.grid-2 { grid-template-columns: 1fr; } }
+
+    .quiz-option {
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .quiz-option:hover {
+      border-color: var(--amber);
+      background: rgba(254,163,22,0.08);
+      color: var(--white);
+    }
+    .quiz-option.selected {
+      border-color: var(--amber);
+      background: rgba(254,163,22,0.15);
+      color: var(--white);
+    }
+    .quiz-option.selected .opt-check { opacity: 1; }
+    .opt-check {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--amber);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .opt-check svg { width: 11px; height: 11px; }
+
+    /* Multi-select continue button */
+    .quiz-multiselect-footer {
+      margin-top: 24px;
+      display: none;
+    }
+    .quiz-multiselect-footer.visible { display: block; }
+
+    /* Email capture screen */
+    #quiz-email-screen {
+      display: none;
+      animation: qfadein 0.4s ease forwards;
+    }
+    #quiz-email-screen.active { display: block; }
+    .quiz-email-intro { margin-bottom: 32px; }
+    .quiz-email-intro h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+    .quiz-email-intro p { color: rgba(255,255,255,0.55); font-size: 0.95rem; }
+    .quiz-field { margin-bottom: 16px; }
+    .quiz-field label { display: block; color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 6px; }
+    .quiz-field input {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .quiz-field input::placeholder { color: rgba(255,255,255,0.3); }
+    .quiz-field input:focus { border-color: var(--amber); }
+
+    /* Result screen */
+    #quiz-result-screen {
+      display: none;
+      animation: qfadein 0.4s ease forwards;
+      text-align: center;
+    }
+    #quiz-result-screen.active { display: block; }
+    .result-score-ring {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(254,163,22,0.12);
+      border: 3px solid var(--amber);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 32px;
+    }
+    .result-score-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 2rem;
+      color: var(--amber);
+      line-height: 1;
+    }
+    .result-score-of { color: rgba(255,255,255,0.4); font-size: 0.75rem; margin-top: 4px; }
+    .result-category {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+    .result-desc {
+      color: rgba(255,255,255,0.6);
+      font-size: 1rem;
+      max-width: 520px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+    .result-ctas {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 480px) {
+      .quiz-header { padding: 16px 20px; }
+      .quiz-progress-wrap { padding: 0 20px; padding-top: 12px; }
+      .quiz-body { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- NAV                                                     -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<nav id="nav">
+  <div class="container">
+    <div class="nav-inner">
+      <!-- Logo -->
+      <a href="#" class="nav-logo" aria-label="Touchpoint Creative">
+        <svg width="180" height="32" viewBox="0 0 180 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Compass "O" mark -->
+          <circle cx="10" cy="16" r="9" stroke="#fea316" stroke-width="2"/>
+          <circle cx="10" cy="16" r="2.5" fill="#fea316"/>
+          <!-- Arrow pointing upper-right -->
+          <line x1="10" y1="16" x2="15.5" y2="10.5" stroke="#fea316" stroke-width="1.5" stroke-linecap="round"/>
+          <polygon points="15.5,10.5 12.5,10.5 15.5,13.5" fill="#fea316"/>
+          <!-- Wordmark -->
+          <text x="26" y="21" font-family="Syne, sans-serif" font-weight="700" font-size="13" fill="#0d0d0d" letter-spacing="0.02em">TOUCHPOINT</text>
+          <text x="26" y="31" font-family="Inter, sans-serif" font-weight="400" font-size="9" fill="#6b7280" letter-spacing="0.12em">CREATIVE</text>
+        </svg>
+      </a>
+      <!-- CTA -->
+      <a href="https://calendly.com/mikeywasnidge/intro-call" target="_blank" rel="noopener" class="btn btn-amber">
+        Book a Free Call
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- HERO                                                    -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <!-- Copy -->
+      <div>
+        <div class="badge fade-in">
+          <span class="badge-dot"></span>
+          AI Implementation · Touchpoint Creative
+        </div>
+        <h1 class="fade-in fade-in-delay-1">Your business runs on your time. AI gives it back.</h1>
+        <p class="hero-sub fade-in fade-in-delay-2">We help working entrepreneurs cut through the AI noise, find real efficiencies, and build tools their teams will actually use — without the jargon or the guesswork.</p>
+        <div class="hero-ctas fade-in fade-in-delay-3">
+          <button class="btn btn-amber btn-lg" onclick="openQuiz()">
+            Take the AI Quiz
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <a href="https://calendly.com/mikeywasnidge/intro-call" target="_blank" rel="noopener" class="btn btn-outline-white btn-lg">Book a Free Call</a>
+        </div>
+      </div>
+      <!-- Hero SVG illustration -->
+      <div class="hero-visual fade-in fade-in-delay-4">
+        <svg width="420" height="380" viewBox="0 0 420 380" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Orbit rings -->
+          <ellipse cx="210" cy="190" rx="150" ry="70" stroke="rgba(254,163,22,0.15)" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <ellipse cx="210" cy="190" rx="110" ry="50" stroke="rgba(254,163,22,0.1)" stroke-width="1" stroke-dasharray="4 6"/>
+          <!-- Connection lines -->
+          <line x1="210" y1="190" x2="340" y2="130" stroke="rgba(254,163,22,0.3)" stroke-width="1"/>
+          <line x1="210" y1="190" x2="80"  y2="140" stroke="rgba(254,163,22,0.3)" stroke-width="1"/>
+          <line x1="210" y1="190" x2="290" y2="290" stroke="rgba(254,163,22,0.3)" stroke-width="1"/>
+          <line x1="210" y1="190" x2="120" y2="270" stroke="rgba(254,163,22,0.3)" stroke-width="1"/>
+          <line x1="210" y1="190" x2="210" y2="60"  stroke="rgba(254,163,22,0.3)" stroke-width="1"/>
+          <!-- Central node -->
+          <circle cx="210" cy="190" r="22" fill="rgba(254,163,22,0.15)" stroke="#fea316" stroke-width="2"/>
+          <circle cx="210" cy="190" r="10" fill="#fea316"/>
+          <!-- Satellite nodes -->
+          <circle cx="340" cy="130" r="14" fill="rgba(254,163,22,0.12)" stroke="#fea316" stroke-width="1.5"/>
+          <circle cx="340" cy="130" r="6" fill="#fea316" opacity="0.7"/>
+          <circle cx="80"  cy="140" r="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+          <circle cx="80"  cy="140" r="5" fill="white" opacity="0.5"/>
+          <circle cx="290" cy="290" r="16" fill="rgba(254,163,22,0.12)" stroke="#fea316" stroke-width="1.5"/>
+          <circle cx="290" cy="290" r="7" fill="#fea316" opacity="0.8"/>
+          <circle cx="120" cy="270" r="10" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+          <circle cx="120" cy="270" r="4" fill="white" opacity="0.5"/>
+          <circle cx="210" cy="60"  r="13" fill="rgba(254,163,22,0.12)" stroke="#fea316" stroke-width="1.5"/>
+          <circle cx="210" cy="60"  r="5" fill="#fea316" opacity="0.6"/>
+          <!-- Secondary connections -->
+          <line x1="340" y1="130" x2="290" y2="290" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+          <line x1="80"  y1="140" x2="120" y2="270" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+          <line x1="210" y1="60"  x2="340" y2="130" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+          <!-- Floating dots -->
+          <circle cx="170" cy="100" r="3" fill="rgba(254,163,22,0.4)"/>
+          <circle cx="280" cy="220" r="2" fill="rgba(254,163,22,0.3)"/>
+          <circle cx="150" cy="220" r="2.5" fill="rgba(255,255,255,0.2)"/>
+          <circle cx="360" cy="220" r="3" fill="rgba(255,255,255,0.15)"/>
+          <circle cx="60"  cy="200" r="2" fill="rgba(254,163,22,0.2)"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAIN POINTS                                             -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="pain">
+  <div class="container">
+    <div class="pain-head fade-in">
+      <span class="label">The Problem</span>
+      <h2>You already know AI can help. You just haven't had time to figure out how.</h2>
+    </div>
+    <div class="pain-cards">
+      <!-- Card 1 -->
+      <div class="pain-card fade-in">
+        <div class="pain-icon">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="44" height="44" rx="8" fill="rgba(254,163,22,0.1)"/>
+            <!-- Warning triangle -->
+            <path d="M22 12l-10 18h20L22 12z" stroke="#fea316" stroke-width="1.8" stroke-linejoin="round"/>
+            <line x1="22" y1="20" x2="22" y2="25" stroke="#fea316" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="22" cy="28" r="1.2" fill="#fea316"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Off-brand AI usage</h3>
+          <p>Your team is using free AI tools — but nobody's sure if it's on-brand or accurate.</p>
+        </div>
+      </div>
+      <!-- Card 2 -->
+      <div class="pain-card fade-in fade-in-delay-1">
+        <div class="pain-icon">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="44" height="44" rx="8" fill="rgba(254,163,22,0.1)"/>
+            <!-- Clock -->
+            <circle cx="22" cy="22" r="10" stroke="#fea316" stroke-width="1.8"/>
+            <line x1="22" y1="15" x2="22" y2="22" stroke="#fea316" stroke-width="1.8" stroke-linecap="round"/>
+            <line x1="22" y1="22" x2="27" y2="26" stroke="#fea316" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="22" cy="22" r="1.5" fill="#fea316"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Potential kept on the backburner</h3>
+          <p>You know AI could save you hours every week, but figuring it out keeps getting pushed.</p>
+        </div>
+      </div>
+      <!-- Card 3 -->
+      <div class="pain-card fade-in fade-in-delay-2">
+        <div class="pain-icon">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="44" height="44" rx="8" fill="rgba(254,163,22,0.1)"/>
+            <!-- Document -->
+            <rect x="13" y="11" width="18" height="22" rx="2" stroke="#fea316" stroke-width="1.8"/>
+            <line x1="17" y1="17" x2="27" y2="17" stroke="#fea316" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="17" y1="21" x2="27" y2="21" stroke="#fea316" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="17" y1="25" x2="23" y2="25" stroke="#fea316" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h3>No AI brand guidelines</h3>
+          <p>You don't have SOPs for how AI should represent your business — and it shows.</p>
+        </div>
+      </div>
+      <!-- Card 4 -->
+      <div class="pain-card fade-in fade-in-delay-3">
+        <div class="pain-icon">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="44" height="44" rx="8" fill="rgba(254,163,22,0.1)"/>
+            <!-- Racing flag / speed lines -->
+            <line x1="15" y1="32" x2="15" y2="12" stroke="#fea316" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M15 12 L29 14 L15 20 L29 22" stroke="#fea316" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Competition is pulling ahead</h3>
+          <p>Competitors are moving faster with AI, and the gap is widening every month.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- WHAT WE DO                                              -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="what">
+  <div class="container">
+    <div class="what-inner">
+      <div class="fade-in">
+        <span class="label">Our Approach</span>
+        <h2>Not a contractor. Not a consultant. Something better.</h2>
+        <p class="what-body">Most businesses get handed a report, a list of tools, and a bill. We do things differently. We get to know your business first — your team, your workflows, your biggest headaches — then we build something that actually fits. And we stay until it sticks.</p>
+      </div>
+      <div class="pillars fade-in fade-in-delay-1">
+        <div class="pillar">
+          <div class="pillar-accent"></div>
+          <div>
+            <h3>Strategic</h3>
+            <p>We understand your business deeply before recommending anything. No generic playbooks, no off-the-shelf solutions.</p>
+          </div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-accent"></div>
+          <div>
+            <h3>Executional</h3>
+            <p>We actually build the tools, not just the deck. You get working systems, not a slide presentation.</p>
+          </div>
+        </div>
+        <div class="pillar">
+          <div class="pillar-accent"></div>
+          <div>
+            <h3>Tailored</h3>
+            <p>No generic AI checklists. Everything is built for your specific business, team, and workflow.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- HOW IT WORKS                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="how">
+  <div class="container">
+    <div class="how-head fade-in">
+      <span class="label">The Process</span>
+      <h2>Three steps. Real results.</h2>
+      <p>No fluff. No unnecessary complexity. Just a clear path to meaningful AI adoption.</p>
+    </div>
+    <div class="steps">
+      <!-- Step 1 -->
+      <div class="step fade-in">
+        <div class="step-illus">
+          <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Magnifying glass + chart -->
+            <circle cx="42" cy="42" r="22" stroke="#fea316" stroke-width="2"/>
+            <line x1="58" y1="58" x2="72" y2="72" stroke="#fea316" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Chart bars inside -->
+            <rect x="34" y="44" width="6" height="10" rx="1" fill="#fea316" opacity="0.6"/>
+            <rect x="42" y="38" width="6" height="16" rx="1" fill="#fea316" opacity="0.8"/>
+            <rect x="50" y="34" width="5" height="20" rx="1" fill="#fea316"/>
+          </svg>
+        </div>
+        <div class="step-num">1</div>
+        <h3>AI Assessment</h3>
+        <p>We walk through your current tools, workflows, team structure, and opportunities — no jargon, just an honest look at where you stand.</p>
+      </div>
+      <!-- Step 2 -->
+      <div class="step fade-in fade-in-delay-1">
+        <div class="step-illus">
+          <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Document + arrow -->
+            <rect x="25" y="18" width="40" height="50" rx="4" stroke="#fea316" stroke-width="2"/>
+            <line x1="33" y1="30" x2="57" y2="30" stroke="#fea316" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="33" y1="38" x2="57" y2="38" stroke="#fea316" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="33" y1="46" x2="48" y2="46" stroke="#fea316" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Arrow pointing right -->
+            <path d="M60 72 L76 72" stroke="#fea316" stroke-width="2" stroke-linecap="round"/>
+            <path d="M70 66 L76 72 L70 78" stroke="#fea316" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="step-num">2</div>
+        <h3>Custom Blueprint</h3>
+        <p>A clear roadmap, written in plain language, built around your actual pain points — not what worked for somebody else's business.</p>
+      </div>
+      <!-- Step 3 -->
+      <div class="step fade-in fade-in-delay-2">
+        <div class="step-illus">
+          <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Gear -->
+            <circle cx="50" cy="50" r="14" stroke="#fea316" stroke-width="2"/>
+            <circle cx="50" cy="50" r="5" fill="#fea316" opacity="0.5"/>
+            <path d="M50 26 L50 32 M50 68 L50 74 M26 50 L32 50 M68 50 L74 50 M32.7 32.7 L36.9 36.9 M63.1 63.1 L67.3 67.3 M67.3 32.7 L63.1 36.9 M36.9 63.1 L32.7 67.3" stroke="#fea316" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Checkmark overlay -->
+            <path d="M60 78 L70 88 L85 68" stroke="#fea316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="72" cy="78" r="12" stroke="rgba(254,163,22,0.3)" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="step-num">3</div>
+        <h3>Implementation</h3>
+        <p>We build the tools, train your team, and make it stick. You don't just get a plan — you get a system that works on day one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- QUIZ TRIGGER                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="quiz-trigger">
+  <div class="container">
+    <div class="quiz-trigger-inner">
+      <!-- Brain/circuit SVG -->
+      <div class="fade-in" style="margin-bottom:32px;">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Brain outline simplified -->
+          <path d="M40 18 C28 18 18 26 18 36 C18 42 21 47 26 50 C26 56 30 62 40 62 C50 62 54 56 54 50 C59 47 62 42 62 36 C62 26 52 18 40 18Z" stroke="#fea316" stroke-width="1.8" fill="rgba(254,163,22,0.06)"/>
+          <!-- Circuit lines -->
+          <line x1="40" y1="30" x2="40" y2="50" stroke="#fea316" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="30" y1="40" x2="50" y2="40" stroke="#fea316" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="33" y1="33" x2="47" y2="47" stroke="rgba(254,163,22,0.4)" stroke-width="1" stroke-linecap="round"/>
+          <line x1="47" y1="33" x2="33" y2="47" stroke="rgba(254,163,22,0.4)" stroke-width="1" stroke-linecap="round"/>
+          <!-- Nodes -->
+          <circle cx="40" cy="30" r="3" fill="#fea316"/>
+          <circle cx="40" cy="50" r="3" fill="#fea316"/>
+          <circle cx="30" cy="40" r="2.5" fill="#fea316" opacity="0.7"/>
+          <circle cx="50" cy="40" r="2.5" fill="#fea316" opacity="0.7"/>
+          <!-- Lightbulb element -->
+          <path d="M36 55 Q40 60 44 55" stroke="#fea316" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <line x1="37" y1="58" x2="43" y2="58" stroke="#fea316" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="fade-in fade-in-delay-1">Where does your business stand on AI?</h2>
+      <p class="fade-in fade-in-delay-2">Take our 10-question AI Readiness Assessment. It takes 3 minutes, costs nothing, and tells you exactly where your biggest opportunities are.</p>
+      <button class="btn btn-amber btn-lg fade-in fade-in-delay-3" onclick="openQuiz()">
+        Start Your Assessment
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- CASE STUDIES                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="cases">
+  <div class="container">
+    <div class="cases-head fade-in">
+      <span class="label">Real Results</span>
+      <h2>What this looks like in practice</h2>
+    </div>
+    <div class="case-cards">
+      <div class="case-card fade-in">
+        <span class="case-tag">Hospitality · 6-person team</span>
+        <h3>Custom AI training assistant eliminates onboarding headaches</h3>
+        <p>A growing hospitality business struggled with inconsistent onboarding. Every new hire asked the same questions, pulling managers away from guests. We built a custom AI assistant trained on their SOPs, menus, and brand voice.</p>
+        <div class="case-outcome">
+          <span class="case-stat">60%</span>
+          <span class="case-stat-label">reduction in onboarding time within the first month of deployment</span>
+        </div>
+      </div>
+      <div class="case-card fade-in fade-in-delay-1">
+        <span class="case-tag">Professional Services · 12-person team</span>
+        <h3>AI-powered proposal system turns hours into minutes</h3>
+        <p>A boutique agency was spending 4–6 hours per proposal, rewriting the same sections from scratch. We built a branded AI proposal engine that generates first drafts aligned to their voice, service packages, and client context.</p>
+        <div class="case-outcome">
+          <span class="case-stat">75%</span>
+          <span class="case-stat-label">faster proposal creation, with higher consistency and fewer revisions</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- BOOK A CALL                                             -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<section id="book">
+  <div class="container">
+    <div class="book-inner">
+      <div class="fade-in">
+        <h2>Ready to find your AI advantage?</h2>
+        <p>Book a free 30-minute discovery call. No pitch. No pressure. Just clarity on where AI can make the biggest difference for your specific business.</p>
+        <a href="https://calendly.com/mikeywasnidge/intro-call" target="_blank" rel="noopener" class="btn btn-dark btn-lg">
+          Book My Free Call
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <!-- Calendly inline widget -->
+      <div class="calendly-wrap fade-in fade-in-delay-1">
+        <div class="calendly-inline-widget"
+          data-url="https://calendly.com/mikeywasnidge/intro-call?hide_event_type_details=1&hide_gdpr_banner=1&background_color=ffffff&text_color=0d0d0d&primary_color=fea316"
+          style="min-width:280px;height:420px;">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- FOOTER                                                  -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<footer id="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <!-- Logo -->
+      <div>
+        <svg width="150" height="28" viewBox="0 0 150 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="9" cy="14" r="8" stroke="#fea316" stroke-width="1.8"/>
+          <circle cx="9" cy="14" r="2" fill="#fea316"/>
+          <line x1="9" y1="14" x2="14" y2="9" stroke="#fea316" stroke-width="1.5" stroke-linecap="round"/>
+          <polygon points="14,9 11.5,9 14,11.5" fill="#fea316"/>
+          <text x="22" y="18" font-family="Syne, sans-serif" font-weight="700" font-size="11.5" fill="#fea316" letter-spacing="0.02em">TOUCHPOINT</text>
+          <text x="22" y="26" font-family="Inter, sans-serif" font-weight="400" font-size="8" fill="rgba(255,255,255,0.4)" letter-spacing="0.12em">CREATIVE</text>
+        </svg>
+        <p style="color:rgba(255,255,255,0.35); font-size:0.8rem; margin-top:8px;">AI that works for your business.</p>
+      </div>
+      <!-- Links -->
+      <div class="footer-links">
+        <a href="https://touchpointcreative.ca" target="_blank" rel="noopener">touchpointcreative.ca</a>
+        <a href="mailto:mikey@touchpointcreative.ca">mikey@touchpointcreative.ca</a>
+      </div>
+      <!-- Copyright -->
+      <p class="footer-copy">© 2025 Touchpoint Creative. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- QUIZ MODAL                                              -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="quiz-modal" role="dialog" aria-modal="true" aria-label="AI Readiness Assessment">
+  <!-- Header -->
+  <div class="quiz-header">
+    <span class="quiz-logo">AI Readiness Assessment</span>
+    <button class="quiz-close" onclick="closeQuiz()" aria-label="Close quiz">✕</button>
+  </div>
+
+  <!-- Progress -->
+  <div class="quiz-progress-wrap">
+    <div class="quiz-progress-label">
+      <span id="progress-text">Question 1 of 10</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="quiz-progress-bar">
+      <div class="quiz-progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="quiz-body">
+
+    <!-- Q1 -->
+    <div class="quiz-question active" data-q="0">
+      <p class="quiz-q-label">Question 1 of 10 · Business Context</p>
+      <h2 class="quiz-q-text">What best describes your industry?</h2>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="selectOption(0, 'industry', 'Retail / E-commerce', 0)">
+          <span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Retail / E-commerce
+        </button>
+        <button class="quiz-option" onclick="selectOption(0, 'industry', 'Hospitality / Food &amp; Beverage', 0)">
+          <span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Hospitality / Food &amp; Beverage
+        </button>
+        <button class="quiz-option" onclick="selectOption(0, 'industry', 'Health &amp; Wellness', 0)">
+          <span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Health &amp; Wellness
+        </button>
+        <button class="quiz-option" onclick="selectOption(0, 'industry', 'Creative / Marketing / Media', 0)">
+          <span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Creative / Marketing / Media
+        </button>
+        <button class="quiz-option" onclick="selectOption(0, 'industry', 'Professional Services', 0)">
+          <span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Professional Services
+        </button>
+        <button class="quiz-option" onclick="selectOption(0, 'industry', 'Trades &amp; Home Services', 0)">
+          <span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Trades &amp; Home Services
+        </button>
+        <button class="quiz-option" onclick="selectOption(0, 'industry', 'Other', 0)">
+          <span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          Other
+        </button>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="quiz-question" data-q="1">
+      <p class="quiz-q-label">Question 2 of 10 · Business Context</p>
+      <h2 class="quiz-q-text">How many people work in your business?</h2>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="selectOption(1, 'teamSize', 'Just me', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Just me</button>
+        <button class="quiz-option" onclick="selectOption(1, 'teamSize', '2–5 people', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>2–5 people</button>
+        <button class="quiz-option" onclick="selectOption(1, 'teamSize', '6–15 people', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>6–15 people</button>
+        <button class="quiz-option" onclick="selectOption(1, 'teamSize', '16–50 people', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>16–50 people</button>
+        <button class="quiz-option" onclick="selectOption(1, 'teamSize', '50+ people', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>50+ people</button>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="quiz-question" data-q="2">
+      <p class="quiz-q-label">Question 3 of 10 · Business Context</p>
+      <h2 class="quiz-q-text">Which best describes your role day-to-day?</h2>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="selectOption(2, 'role', 'I do a bit of everything', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>I do a bit of everything</button>
+        <button class="quiz-option" onclick="selectOption(2, 'role', 'I focus on sales and client relationships', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>I focus on sales and client relationships</button>
+        <button class="quiz-option" onclick="selectOption(2, 'role', 'I handle operations and admin', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>I handle operations and admin</button>
+        <button class="quiz-option" onclick="selectOption(2, 'role', 'I lead and manage a team', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>I lead and manage a team</button>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="quiz-question" data-q="3">
+      <p class="quiz-q-label">Question 4 of 10 · AI Readiness</p>
+      <h2 class="quiz-q-text">When you hear "AI tools," what's your honest first reaction?</h2>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="selectOption(3, 'reaction', 'I use them regularly', 2)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>"I use them regularly"</button>
+        <button class="quiz-option" onclick="selectOption(3, 'reaction', 'I\'ve tried a few, still figuring it out', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>"I've tried a few, still figuring it out"</button>
+        <button class="quiz-option" onclick="selectOption(3, 'reaction', 'I know I should be, but haven\'t started', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>"I know I should be, but haven't started"</button>
+        <button class="quiz-option" onclick="selectOption(3, 'reaction', 'I\'m not sure where to begin', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>"I'm not sure where to begin"</button>
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="quiz-question" data-q="4">
+      <p class="quiz-q-label">Question 5 of 10 · AI Readiness</p>
+      <h2 class="quiz-q-text">How often do you or your team use AI tools in your work?</h2>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="selectOption(4, 'frequency', 'Daily, for multiple tasks', 2)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Daily, for multiple tasks</button>
+        <button class="quiz-option" onclick="selectOption(4, 'frequency', 'A few times a week', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>A few times a week</button>
+        <button class="quiz-option" onclick="selectOption(4, 'frequency', 'Occasionally, when we remember', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Occasionally, when we remember</button>
+        <button class="quiz-option" onclick="selectOption(4, 'frequency', 'Rarely or never', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Rarely or never</button>
+      </div>
+    </div>
+
+    <!-- Q6 — Multi-select -->
+    <div class="quiz-question" data-q="5">
+      <p class="quiz-q-label">Question 6 of 10 · AI Readiness</p>
+      <h2 class="quiz-q-text">Which of these eat the most time in your business?</h2>
+      <p class="quiz-q-sub">Select up to 3 — we'll show you which AI tools can help with each.</p>
+      <div class="quiz-options grid-2" id="q6-options">
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Writing emails, proposals, or content', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Writing emails, proposals, or content</button>
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Answering the same customer questions', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Answering the same customer questions</button>
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Training or onboarding new staff', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Training or onboarding new staff</button>
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Scheduling, admin, or data entry', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Scheduling, admin, or data entry</button>
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Managing project budgets', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Managing project budgets</button>
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Social media and content calendars', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Social media and content calendars</button>
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Invoicing, quotes, or client follow-ups', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Invoicing, quotes, or client follow-ups</button>
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Tracking leads and sales pipeline', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Tracking leads and sales pipeline</button>
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Customer reviews and feedback', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Customer reviews and feedback</button>
+        <button class="quiz-option" onclick="toggleMulti(this, 'timeSinks', 'Competitor research', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Competitor research</button>
+      </div>
+      <div class="quiz-multiselect-footer" id="q6-footer">
+        <button class="btn btn-amber" onclick="advanceMulti(5)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="quiz-question" data-q="6">
+      <p class="quiz-q-label">Question 7 of 10 · AI Readiness</p>
+      <h2 class="quiz-q-text">Has a team member ever used a free AI tool in a way that felt off-brand or unprofessional?</h2>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="selectOption(6, 'offBrand', 'Yes — it\'s happened and it concerns me', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Yes — it's happened and it concerns me</button>
+        <button class="quiz-option" onclick="selectOption(6, 'offBrand', 'Maybe — I haven\'t thought about it much', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Maybe — I haven't thought about it much</button>
+        <button class="quiz-option" onclick="selectOption(6, 'offBrand', 'No — we have guidelines in place', 2)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>No — we have guidelines and processes in place</button>
+        <button class="quiz-option" onclick="selectOption(6, 'offBrand', 'We don\'t use AI tools yet', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>We don't use AI tools yet</button>
+      </div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="quiz-question" data-q="7">
+      <p class="quiz-q-label">Question 8 of 10 · AI Readiness</p>
+      <h2 class="quiz-q-text">Do you have a documented process for how your team communicates with clients?</h2>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="selectOption(7, 'sops', 'Yes — detailed SOPs and brand guidelines', 2)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Yes — detailed SOPs and brand guidelines</button>
+        <button class="quiz-option" onclick="selectOption(7, 'sops', 'Somewhat — it\'s mostly informal', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Somewhat — it's mostly informal</button>
+        <button class="quiz-option" onclick="selectOption(7, 'sops', 'Not really, but I\'d like to fix that', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Not really, but I'd like to fix that</button>
+        <button class="quiz-option" onclick="selectOption(7, 'sops', 'No, and it\'s not a priority', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>No, and it's not a priority</button>
+      </div>
+    </div>
+
+    <!-- Q9 -->
+    <div class="quiz-question" data-q="8">
+      <p class="quiz-q-label">Question 9 of 10 · AI Readiness</p>
+      <h2 class="quiz-q-text">If a customer messaged your business at 10pm, what would happen?</h2>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="selectOption(8, 'afterHours', 'An automated system handles it', 2)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>An automated system handles it</button>
+        <button class="quiz-option" onclick="selectOption(8, 'afterHours', 'A team member might respond on their own time', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>A team member might respond on their own time</button>
+        <button class="quiz-option" onclick="selectOption(8, 'afterHours', 'They\'d wait until the next business day', 0)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>They'd wait until the next business day</button>
+        <button class="quiz-option" onclick="selectOption(8, 'afterHours', 'We don\'t get many after-hours messages', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>We don't get many after-hours messages</button>
+      </div>
+    </div>
+
+    <!-- Q10 -->
+    <div class="quiz-question" data-q="9">
+      <p class="quiz-q-label">Question 10 of 10 · AI Readiness</p>
+      <h2 class="quiz-q-text">What's your biggest growth blocker right now?</h2>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="selectOption(9, 'blocker', 'Not enough hours in the day', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Not enough hours in the day</button>
+        <button class="quiz-option" onclick="selectOption(9, 'blocker', 'Inconsistent quality or communication', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Inconsistent quality or communication</button>
+        <button class="quiz-option" onclick="selectOption(9, 'blocker', 'Finding and keeping good staff', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Finding and keeping good staff</button>
+        <button class="quiz-option" onclick="selectOption(9, 'blocker', 'Turning interested leads into paying clients', 1)"><span class="opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M2 5.5l3 3 4-5" stroke="#0d0d0d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Turning interested leads into paying clients</button>
+      </div>
+    </div>
+
+    <!-- Email Capture -->
+    <div id="quiz-email-screen">
+      <div class="quiz-email-intro">
+        <h2>Almost there — where should we send your results?</h2>
+        <p>Your AI Readiness score is ready. Enter your details below and we'll include a personalized breakdown with it.</p>
+      </div>
+      <div class="quiz-field">
+        <label for="quiz-name">Your name</label>
+        <input type="text" id="quiz-name" placeholder="Jane Smith" autocomplete="name" />
+      </div>
+      <div class="quiz-field">
+        <label for="quiz-email">Your email address</label>
+        <input type="email" id="quiz-email" placeholder="jane@yourbusiness.com" autocomplete="email" />
+      </div>
+      <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+        <button class="btn btn-amber btn-lg" onclick="submitQuiz()" id="quiz-submit-btn">
+          Get My Results →
+        </button>
+      </div>
+      <p style="color: rgba(255,255,255,0.3); font-size: 0.78rem; margin-top: 16px;">No spam. We'll only contact you with your results and relevant follow-up. Unsubscribe anytime.</p>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="quiz-result-screen">
+      <div class="result-score-ring">
+        <span class="result-score-num" id="result-num">0</span>
+        <span class="result-score-of">out of 14</span>
+      </div>
+      <h2 class="result-category" id="result-category">AI Newcomer</h2>
+      <p class="result-desc" id="result-desc"></p>
+      <div class="result-ctas">
+        <a href="https://calendly.com/mikeywasnidge/intro-call" target="_blank" rel="noopener" class="btn btn-amber btn-lg">
+          Book My Free Call →
+        </a>
+        <button class="btn btn-outline-white" onclick="closeQuiz()">
+          Back to Site
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /quiz-body -->
+</div><!-- /quiz-modal -->
+
+<script>
+  /* ── Quiz State ──────────────────────────────────────── */
+  const state = {
+    currentQ: 0,
+    totalQ: 10,
+    score: 0,
+    answers: {},
+    multiAnswers: {},  // for Q6
+    multiScore: 0,     // tracked separately
+  };
+
+  const scoreCategories = [
+    { min: 0,  max: 3,  name: 'AI Newcomer',  desc: 'The opportunity in front of you is enormous. You\'re at the starting line — and you don\'t have to figure it out alone. A structured AI implementation could change how your business operates in a matter of weeks.' },
+    { min: 4,  max: 7,  name: 'AI Curious',   desc: 'You see the potential, but haven\'t built a system around it yet. A clear roadmap could change everything. You\'re closer than you think — you just need a plan and someone to help you execute it.' },
+    { min: 8,  max: 11, name: 'AI Explorer',  desc: 'You\'re making moves. But your AI usage is still ad hoc. Let\'s make it intentional and scalable. With the right structure, you could turn experimental wins into consistent, business-wide efficiency.' },
+    { min: 12, max: 14, name: 'AI Operator',  desc: 'You\'re ahead of most businesses. But there\'s always a next level — and we know how to get you there. Let\'s identify where you\'re leaving gains on the table and build systems that compound.' },
+  ];
+
+  /* ── Quiz Open/Close ─────────────────────────────────── */
+  function openQuiz() {
+    const modal = document.getElementById('quiz-modal');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    updateProgress();
+  }
+
+  function closeQuiz() {
+    const modal = document.getElementById('quiz-modal');
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('quiz-modal').addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeQuiz();
+  });
+
+  /* ── Progress ────────────────────────────────────────── */
+  function updateProgress() {
+    const q = state.currentQ;
+    const pct = Math.round((q / state.totalQ) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+    if (q < state.totalQ) {
+      document.getElementById('progress-text').textContent = 'Question ' + (q + 1) + ' of ' + state.totalQ;
+    } else {
+      document.getElementById('progress-text').textContent = 'Almost done!';
+    }
+  }
+
+  /* ── Single-select question ──────────────────────────── */
+  function selectOption(qIndex, key, value, points) {
+    // Visual: mark selected
+    const qEl = document.querySelector('[data-q="' + qIndex + '"]');
+    qEl.querySelectorAll('.quiz-option').forEach(btn => btn.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+
+    // Store answer
+    state.answers[key] = value;
+    state.score += points;
+
+    // Advance after brief delay
+    setTimeout(() => advanceQuestion(qIndex), 380);
+  }
+
+  /* ── Multi-select question (Q6) ──────────────────────── */
+  const MAX_MULTI = 3;
+  let multiSelected = {};
+
+  function toggleMulti(btn, key, value, points) {
+    const isSelected = btn.classList.contains('selected');
+
+    if (isSelected) {
+      btn.classList.remove('selected');
+      delete multiSelected[value];
+    } else {
+      const count = Object.keys(multiSelected).length;
+      if (count >= MAX_MULTI) return; // cap at 3
+      btn.classList.add('selected');
+      multiSelected[value] = points;
+    }
+
+    // Show/hide continue button
+    const footer = document.getElementById('q6-footer');
+    footer.classList.toggle('visible', Object.keys(multiSelected).length > 0);
+  }
+
+  function advanceMulti(qIndex) {
+    // Tally Q6 score (capped at 3)
+    const pts = Object.keys(multiSelected).length; // 1pt each, max 3
+    state.score += Math.min(pts, MAX_MULTI);
+    state.answers['timeSinks'] = Object.keys(multiSelected).join(', ');
+    multiSelected = {};
+    document.getElementById('q6-footer').classList.remove('visible');
+    advanceQuestion(qIndex);
+  }
+
+  /* ── Advance to next question ────────────────────────── */
+  function advanceQuestion(qIndex) {
+    const next = qIndex + 1;
+
+    // Hide current
+    const current = document.querySelector('[data-q="' + qIndex + '"]');
+    if (current) current.classList.remove('active');
+
+    if (next < state.totalQ) {
+      // Show next question
+      const nextEl = document.querySelector('[data-q="' + next + '"]');
+      if (nextEl) nextEl.classList.add('active');
+      state.currentQ = next;
+    } else {
+      // Show email capture
+      document.getElementById('quiz-email-screen').classList.add('active');
+      state.currentQ = state.totalQ;
+    }
+    updateProgress();
+  }
+
+  /* ── Submit quiz ─────────────────────────────────────── */
+  async function submitQuiz() {
+    const name  = document.getElementById('quiz-name').value.trim();
+    const email = document.getElementById('quiz-email').value.trim();
+
+    if (!name) { document.getElementById('quiz-name').focus(); return; }
+    if (!email || !email.includes('@')) { document.getElementById('quiz-email').focus(); return; }
+
+    const btn = document.getElementById('quiz-submit-btn');
+    btn.textContent = 'Calculating…';
+    btn.disabled = true;
+
+    // Determine category
+    const score = state.score;
+    const cat = scoreCategories.find(c => score >= c.min && score <= c.max) || scoreCategories[0];
+
+    // Show result screen
+    showResult(name, score, cat);
+
+    // Fire notification (non-blocking)
+    try {
+      await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          score,
+          category: cat.name,
+          answers: state.answers,
+        }),
+      });
+    } catch (err) {
+      // Silent fail — results still show
+      console.warn('Notification error:', err);
+    }
+  }
+
+  function showResult(name, score, cat) {
+    // Hide email screen
+    document.getElementById('quiz-email-screen').classList.remove('active');
+
+    // Fill result
+    document.getElementById('result-num').textContent = score;
+    document.getElementById('result-category').textContent = cat.name;
+    document.getElementById('result-desc').textContent = cat.desc;
+
+    // Show result
+    const resultEl = document.getElementById('quiz-result-screen');
+    resultEl.classList.add('active');
+
+    // Progress to 100%
+    document.getElementById('progress-fill').style.width = '100%';
+    document.getElementById('progress-pct').textContent = '100%';
+    document.getElementById('progress-text').textContent = 'Complete!';
+  }
+
+  /* ── Intersection observer for fade-ins ──────────────── */
+  (function() {
+    // Immediately show hero elements
+    document.querySelectorAll('#hero .fade-in').forEach(el => {
+      requestAnimationFrame(() => el.classList.add('visible'));
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.fade-in:not(#hero .fade-in)').forEach(el => {
+      observer.observe(el);
+    });
+  })();
+</script>
+
+</body>
+</html>
